@@ -4,26 +4,25 @@ import (
 	"Assignment2/internal/app"
 	"Assignment2/internal/pkg/services/client_service"
 	"Assignment2/internal/pkg/services/messages_service"
-	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"Assignment2/internal/server"
+	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 func main() {
-	messageService := messages_service.NewMessageService()
-	clientService := client_service.NewClientService()
+	fx.New(getFxOptions()).Run()
+}
 
-	application := app.NewApplication(messageService, clientService)
-
-	e := echo.New()
-	e.Logger.SetLevel(log.INFO)
-
-	e.GET("/messages/count", application.GetMessageCount())
-	e.GET("/messages/ws", application.HandleWebSocket())
-
-	port := 8080
-	e.Logger.Infof("Starting server on port %d", port)
-	if err := e.Start(fmt.Sprintf(":%d", port)); err != nil {
-		return
-	}
+func getFxOptions() fx.Option {
+	return fx.Options(
+		fx.WithLogger(getEventLogger),
+		fx.Provide(
+			zap.NewDevelopment,
+			messages_service.NewMessageService,
+			client_service.NewClientService,
+			app.NewApplication,
+			server.NewServer,
+		),
+		fx.Invoke(startServer),
+	)
 }

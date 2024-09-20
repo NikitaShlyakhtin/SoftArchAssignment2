@@ -19,7 +19,7 @@ func (app *Application) HandleWebSocket() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 		if err != nil {
-			c.Logger().Errorf("HandleWebSocket: error upgrading connection to websocket: %v", err)
+			app.Logger.Errorf("HandleWebSocket: error upgrading connection to websocket: %v", err)
 			return err
 		}
 		defer conn.Close()
@@ -29,20 +29,20 @@ func (app *Application) HandleWebSocket() echo.HandlerFunc {
 
 		err = app.writeMessageHistoryToNewClient(conn)
 		if err != nil {
-			c.Logger().Errorf("HandleWebSocket: error writing message history: %v", err)
+			app.Logger.Errorf("HandleWebSocket: error writing message history: %v", err)
 			return err
 		}
 
 		for {
 			newMessageContent, err := app.readNewMessage(conn)
 			if err != nil {
-				c.Logger().Errorf("HandleWebSocket: error reading new message: %v", err)
+				app.Logger.Errorf("HandleWebSocket: error reading new message: %v", err)
 				return err
 			}
 
 			message, err := app.MessageService.CreateMessage(newMessageContent)
 			if err != nil {
-				c.Logger().Errorf("HandleWebSocket: error creating message: %v", err)
+				app.Logger.Errorf("HandleWebSocket: error creating message: %v", err)
 				return err
 			}
 

@@ -3,13 +3,16 @@ package messages_service
 import (
 	"Assignment2/internal/dependencies"
 	"Assignment2/internal/pkg/models"
+	"errors"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"sync"
 	"time"
 )
 
 // MessageService implementation of IMessageService interface
 type MessageService struct {
+	Logger   *zap.SugaredLogger
 	messages []*models.Message
 	mu       sync.RWMutex
 }
@@ -17,10 +20,15 @@ type MessageService struct {
 var _ dependencies.IMessageService = (*MessageService)(nil)
 
 // NewMessageService creates a new instance of MessageService
-func NewMessageService() dependencies.IMessageService {
-	return &MessageService{
-		messages: make([]*models.Message, 0),
+func NewMessageService(l *zap.Logger) (dependencies.IMessageService, error) {
+	if l == nil {
+		return nil, errors.New("logger must be provided")
 	}
+
+	return &MessageService{
+		Logger:   l.Sugar(),
+		messages: make([]*models.Message, 0),
+	}, nil
 }
 
 // CreateMessage adds a new message to the service

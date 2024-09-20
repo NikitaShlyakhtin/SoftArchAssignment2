@@ -3,12 +3,15 @@ package client_service
 import (
 	"Assignment2/internal/dependencies"
 	"Assignment2/internal/pkg/models"
+	"errors"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 	"sync"
 )
 
 // ClientService is the implementation of IClientService
 type ClientService struct {
+	Logger  *zap.SugaredLogger
 	clients map[*websocket.Conn]struct{}
 	mu      sync.RWMutex
 }
@@ -16,10 +19,15 @@ type ClientService struct {
 var _ dependencies.IClientService = (*ClientService)(nil)
 
 // NewClientService creates a new instance of IClientService
-func NewClientService() dependencies.IClientService {
-	return &ClientService{
-		clients: make(map[*websocket.Conn]struct{}),
+func NewClientService(l *zap.Logger) (dependencies.IClientService, error) {
+	if l == nil {
+		return nil, errors.New("logger must be provided")
 	}
+
+	return &ClientService{
+		Logger:  l.Sugar(),
+		clients: make(map[*websocket.Conn]struct{}),
+	}, nil
 }
 
 // AddClient adds a new WebSocket client

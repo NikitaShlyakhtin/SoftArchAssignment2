@@ -9,6 +9,7 @@ import (
 func (app *Application) GetMessageCount() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		count := app.MessageService.GetMessageCount()
+
 		return c.JSON(http.StatusOK, map[string]int{"count": count})
 	}
 }
